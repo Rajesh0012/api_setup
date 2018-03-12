@@ -58,4 +58,72 @@ class MX_Controller
 	{
 		return CI::$APP->$class;
 	}
+
+    public function html($page = '',$data = ''){
+
+        if(isset($page) && !empty($page))
+        {
+            $this->load->view('header',$data);
+            $this->load->view('sidebar');
+            $this->load->view($page);
+            $this->load->view('footer');
+        }
+
+    }
+
+    public function file_upload($path = NULL,$imagename = NULL)
+    {
+
+        if(!empty($imagename) || !empty($path))
+        {
+            try {
+
+                $config['upload_path'] = $path;
+                $config['allowed_types'] = 'gif|jpg|png|jpeg';
+                $config['file_ext_tolower'] = TRUE;
+                $config['max_size'] = 5120;
+                $config['remove_spaces'] = TRUE;
+                $config['detect_mime'] = TRUE;
+
+                $randname = date('Y-m-d h:i:s ssss');
+                $config['file_name'] = str_replace(':', '', str_replace('-', '', $randname)) . '_Checkiodds';
+                 $this->load->library('upload', $config);
+
+                $this->upload->initialize($config);
+
+                 if ($this->upload->do_upload($imagename)) {
+                    $data = $this->upload->data();
+                     $resize['image_library'] = 'gd2';
+                     $resize['source_image'] = $path.'/'.$data['orig_name'];
+                     $resize['create_thumb'] = TRUE;
+                    // $resize['maintain_ratio'] = TRUE;
+                     $resize['width']   = 200;
+                     $resize['height']  = 150;
+                     //$resize['quality']  = '100%';
+                     $resize['new_image']  = $path.'/'.$data['orig_name'];
+
+                     $this->load->library('image_lib', $resize);
+                     $this->image_lib->initialize($resize);
+
+                     $this->image_lib->resize();
+
+                     if ( ! $this->image_lib->resize())
+                     {
+                         echo $this->image_lib->display_errors();
+                     }
+                    return ($data['orig_name']);
+                } else {
+                    $error = $this->upload->display_errors();
+                    return $error;
+                }
+
+            }catch ( Exception $ex){
+                return $ex->getMessage();
+            }
+
+
+        }else{
+            return false;
+        }
+    }
 }
